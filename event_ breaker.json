@@ -1,0 +1,31 @@
+{
+    "id": "Rapid7 InsightVM",
+    "minRawLength": 256,
+    "rules": [
+      {
+        "condition": "__collectStats.url.includes(\"rapid7\")",
+        "type": "regex",
+        "timestampAnchorRegex": "/^/",
+        "timestamp": {
+          "type": "current",
+          "length": 150
+        },
+        "timestampTimezone": "local",
+        "timestampEarliest": "-420weeks",
+        "timestampLatest": "+1week",
+        "maxEventBytes": 10240000,
+        "disabled": false,
+        "parserEnabled": false,
+        "shouldUseDataRaw": false,
+        "eventBreakerRegex": "/^.*$/",
+        "jsonExtractAll": false,
+        "delimiterRegex": "/\\t/",
+        "fieldsLineRegex": "/^#[Ff]ields[:]?\\s+(.*)/",
+        "headerLineRegex": "/^#/",
+        "nullFieldVal": "-",
+        "cleanFields": true,
+        "name": "r7",
+        "fields": []
+      }
+    ]
+  } 

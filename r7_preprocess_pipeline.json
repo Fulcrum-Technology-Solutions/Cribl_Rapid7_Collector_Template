@@ -1,0 +1,48 @@
+{
+  "id": "Rapid7_insightVM_pre_pipeline",
+  "conf": {
+    "output": "default",
+    "streamtags": [],
+    "groups": {},
+    "asyncFuncTimeout": 1000,
+    "functions": [
+      {
+        "conf": {},
+        "id": "drop",
+        "filter": "JSON.parse(_raw).data.length === 0 && JSON.parse(_raw).metadata.totalResources === 0",
+        "disabled": false,
+        "final": false,
+        "description": "Removes empty/null responses."
+      },
+      {
+        "id": "event_breaker",
+        "filter": "sourcetype.includes('rapid7:insightvm')",
+        "disabled": false,
+        "conf": {
+          "existingOrNew": "new",
+          "shouldMarkCriblBreaker": false,
+          "ruleType": "json_array",
+          "maxEventBytes": 51200,
+          "timestampAnchorRegex": "/^/",
+          "timestamp": {
+            "type": "current",
+            "length": 150
+          },
+          "timestampTimezone": "local",
+          "timestampEarliest": "-420weeks",
+          "timestampLatest": "+1week",
+          "jsonExtractAll": false,
+          "eventBreakerRegex": "/[\\n\\r]+(?!\\s)/",
+          "existingRule": "",
+          "jsonArrayField": "data"
+        },
+        "description": "Unroll events, used to preserve metadata fields for pagination"
+      },
+      {
+        "id": "comment",
+        "conf": {}
+      }
+    ],
+    "description": "Pre-processing eventbreaker"
+  }
+}

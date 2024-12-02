@@ -1,0 +1,321 @@
+{
+  "id": "Rapid7_insightVM_pipeline",
+  "conf": {
+    "output": "default",
+    "streamtags": [],
+    "groups": {
+      "UeDaOz": {
+        "name": "Assets",
+        "index": 0,
+        "disabled": false
+      },
+      "tNPAUL": {
+        "name": "Vulnerabilities",
+        "index": 1,
+        "disabled": false
+      },
+      "IRm6hQ": {
+        "name": "Asset Vulnerability Findings",
+        "index": 2,
+        "disabled": false
+      },
+      "94qWW3": {
+        "name": "DEV - Asset Vulnerability Findings",
+        "index": 3,
+        "disabled": true
+      }
+    },
+    "asyncFuncTimeout": 1000,
+    "functions": [
+      {
+        "id": "clone",
+        "filter": "sourcetype=='rapid7:insightvm:asset'",
+        "disabled": false,
+        "conf": {
+          "clones": [
+            {
+              "sourcetype": "'rapid7:insightvm:asset:vulnerability_finding' "
+            }
+          ]
+        },
+        "description": "Split Asset and Asset Vulnerabilities",
+        "groupId": "UeDaOz"
+      },
+      {
+        "id": "serde",
+        "filter": "sourcetype=='rapid7:insightvm:asset'",
+        "disabled": false,
+        "conf": {
+          "mode": "extract",
+          "type": "json",
+          "srcField": "_raw",
+          "fields": []
+        },
+        "groupId": "UeDaOz"
+      },
+      {
+        "id": "eval",
+        "filter": "sourcetype=='rapid7:insightvm:asset'",
+        "disabled": false,
+        "conf": {
+          "remove": [
+            "links",
+            "data",
+            "metadata",
+            "same",
+            "remediated",
+            "new",
+            "_raw"
+          ],
+          "add": []
+        },
+        "groupId": "UeDaOz",
+        "final": true
+      },
+      {
+        "id": "serde",
+        "filter": "sourcetype=='rapid7:insightvm:vulnerability_definition'",
+        "disabled": false,
+        "conf": {
+          "mode": "extract",
+          "type": "json",
+          "srcField": "_raw"
+        },
+        "groupId": "tNPAUL"
+      },
+      {
+        "id": "eval",
+        "filter": "sourcetype=='rapid7:insightvm:vulnerability_definition'",
+        "disabled": false,
+        "conf": {
+          "remove": [
+            "links",
+            "data",
+            "metadata",
+            "id"
+          ],
+          "add": [
+            {
+              "disabled": false,
+              "name": "vulnerability_id",
+              "value": "__e.id"
+            }
+          ]
+        },
+        "groupId": "tNPAUL",
+        "final": true
+      },
+      {
+        "id": "serde",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding' ",
+        "disabled": false,
+        "conf": {
+          "mode": "extract",
+          "type": "json",
+          "srcField": "_raw",
+          "keep": [
+            "same*",
+            "new*",
+            "remediated*",
+            "_time",
+            "sourcetype",
+            "index",
+            "id",
+            "ip",
+            "host_name"
+          ],
+          "remove": [
+            "*"
+          ]
+        },
+        "groupId": "IRm6hQ"
+      },
+      {
+        "id": "code",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": false,
+        "conf": {
+          "maxNumOfIterations": 5000,
+          "activeLogSampleRate": 1,
+          "useUniqueLogChannel": false,
+          "code": "__e.hasOwnProperty('remediated') && Array.isArray(__e.remediated) && __e.remediated.length > 0\r\n\r\n// For new array:\r\n__e.hasOwnProperty('new') && Array.isArray(__e.new) && __e.new.length > 0\r\n\r\n// For same array:\r\n__e.hasOwnProperty('same') && Array.isArray(__e.same) && __e.same.length > 0\r\n\r\n// Process arrays and add status fields\r\nif (__e.hasOwnProperty('remediated') && Array.isArray(__e.remediated)) {\r\n    __e.remediated.forEach(item => {\r\n        item.finding_status = \"remediated\";\r\n    });\r\n}\r\n\r\nif (__e.hasOwnProperty('new') && Array.isArray(__e.new)) {\r\n    __e.new.forEach(item => {\r\n        item.finding_status = \"new\";\r\n    });\r\n}\r\n\r\nif (__e.hasOwnProperty('same') && Array.isArray(__e.same)) {\r\n    __e.same.forEach(item => {\r\n        item.finding_status = \"same\";\r\n    });\r\n}\r\n\r\n// Concatenate all arrays into a single array\r\n\r\n__e['all_items'] = __e['same'];\r\n__e['all_items'] << __e['remediated'];\r\n__e['all_items'] << __e['new'];\r\n\r\n__e.serialized_items = {\r\n    all_items: __e['all_items']\r\n};\r\ndelete __e['all_items'];"
+        },
+        "groupId": "IRm6hQ",
+        "description": "This code snippet takes all three vulnerability json arrays and inserts is_* field, then puts them all into the same array to be unrolled."
+      },
+      {
+        "id": "eval",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": false,
+        "conf": {
+          "keep": [
+            "_time",
+            "index",
+            "sourcetype",
+            "ip",
+            "id",
+            "host_name",
+            "serialized_items*"
+          ],
+          "remove": [
+            "*"
+          ],
+          "add": []
+        },
+        "groupId": "IRm6hQ"
+      },
+      {
+        "id": "serialize",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "conf": {
+          "type": "json",
+          "srcField": "serialized_items",
+          "fields": [
+            "*"
+          ]
+        },
+        "groupId": "IRm6hQ"
+      },
+      {
+        "id": "eval",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": false,
+        "conf": {
+          "add": [],
+          "remove": [
+            "serialized_items"
+          ]
+        },
+        "groupId": "IRm6hQ"
+      },
+      {
+        "id": "json_unroll",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": false,
+        "conf": {
+          "path": "all_items",
+          "name": "items"
+        },
+        "groupId": "IRm6hQ"
+      },
+      {
+        "id": "serde",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding' ",
+        "disabled": false,
+        "conf": {
+          "mode": "extract",
+          "type": "json",
+          "srcField": "_raw",
+          "fields": []
+        },
+        "groupId": "IRm6hQ"
+      },
+      {
+        "id": "flatten",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": false,
+        "conf": {
+          "fields": [
+            "*"
+          ],
+          "prefix": "",
+          "depth": 5,
+          "delimiter": "."
+        },
+        "groupId": "IRm6hQ"
+      },
+      {
+        "id": "rename",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": false,
+        "conf": {
+          "wildcardDepth": 5,
+          "renameExpr": "name.startsWith('items') ? name.split(\".\",2)[1] : name",
+          "rename": []
+        },
+        "groupId": "IRm6hQ"
+      },
+      {
+        "id": "eval",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "conf": {
+          "remove": [
+            "_raw"
+          ]
+        },
+        "groupId": "IRm6hQ"
+      },
+      {
+        "id": "drop",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding' && finding_status==null",
+        "conf": {},
+        "groupId": "IRm6hQ",
+        "description": "Drops events that don't have finding_status",
+        "final": false
+      },
+      {
+        "id": "serde",
+        "filter": "__inputId.contains(\"collection:rapid7_insightvm_vulnerabilities\") &&  sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": true,
+        "conf": {
+          "mode": "extract",
+          "type": "json",
+          "srcField": "_raw",
+          "dstField": "json"
+        },
+        "groupId": "94qWW3"
+      },
+      {
+        "id": "code",
+        "filter": "__inputId.contains(\"collection:rapid7_insightvm_vulnerabilities\") &&  sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": true,
+        "conf": {
+          "maxNumOfIterations": 5000,
+          "activeLogSampleRate": 1,
+          "useUniqueLogChannel": false,
+          "code": "// direct assignment\r\n__e['concat_arrays'] = __e['same'];\r\n__e['concat_arrays'] << __e['remediated'];\r\n\r\n// doc example\r\n//__e['concat_arrays'] = __e['same'].map(entry => {\r\n//    const container = {};\r\n//   for (const [key, value] of Object.entries(entry)) {\r\n//        container[key] = value;\r\n//    }\r\n//   delete container.name;\r\n//    return container;\r\n//});\r\n\r\n\r\n"
+        },
+        "groupId": "94qWW3"
+      },
+      {
+        "id": "eval",
+        "filter": "sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": true,
+        "conf": {
+          "keep": [
+            "_time",
+            "asset_hostname",
+            "asset_id",
+            "asset_ip",
+            "new",
+            "remediated",
+            "same",
+            "index",
+            "sourcetype",
+            "_raw",
+            "concat_arrays"
+          ],
+          "remove": [
+            "*"
+          ],
+          "add": []
+        },
+        "groupId": "94qWW3"
+      },
+      {
+        "id": "serde",
+        "filter": "__inputId.contains(\"collection:rapid7_insightvm_assets\") && sourcetype=='rapid7:insightvm:asset:vulnerability_finding'",
+        "disabled": true,
+        "conf": {
+          "mode": "extract",
+          "type": "csv",
+          "srcField": "_raw",
+          "keep": [],
+          "remove": []
+        },
+        "groupId": "94qWW3"
+      }
+    ],
+    "description": "Rapid7 InsightVM - Fulcrum Custom"
+  }
+}

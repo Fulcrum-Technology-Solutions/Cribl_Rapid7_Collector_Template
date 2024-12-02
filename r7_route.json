@@ -1,0 +1,25 @@
+{
+  "id": "default",
+  "routes": [
+    {
+      "filter": " __inputId.includes('Rapid7_InsightVM') ",
+      "enableOutputExpression": false,
+      "output": "",
+      "final": true,
+      "id": "7OLKEh",
+      "name": "rapid7_insightvm",
+      "disabled": false,
+      "pipeline": "Rapid7_insightVM_pipeline",
+      "description": "",
+      "clones": []
+    }
+  ],
+  "comments": [
+    {
+      "id": "AbcJKC",
+      "comment": "Rapid7 Insight Pipeline",
+      "index": 8
+    }
+  ],
+  "groups": {}
+}
