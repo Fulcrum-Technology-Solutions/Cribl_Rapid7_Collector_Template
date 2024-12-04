@@ -34,11 +34,11 @@ Initial release
 ## Contributing to the Pack
 To contribute to the Pack, please do the following:
 
-[Contributor instructions go here.]
+* Email us at dcrooks@ftsc.com or jowen@ftsc.com
 
 
 ## Contact
-To contact us please email <dcrooks@ftsc.com> or <devlincrooks@gmail.com>.
+To contact us please email <dcrooks@ftsc.com>.
 
 
 ## License
