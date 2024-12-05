@@ -23,6 +23,7 @@ To use this Pack, follow these steps:
 1. Import the rest collectors and eventbreaker
 2. Ensure the route is matching on your collector input id, and the pre-processing pipeline is attached to the collectors.
 3. Configure the API key, query conditionals, and additional fields in the collectors.
+4. If you want to pull ALL data for a fresh pull, you can go into the rest collectors body argument and change the '1' (Day of month) to the current day and run it.
 
 
 ## Release Notes
@@ -42,4 +43,4 @@ To contact us please email <dcrooks@ftsc.com>.
 
 
 ## License
-This Pack uses the following license: [`<license_name>`](https://link-to-license-example.com).
+This Pack uses the following license: [`<CC0-1.0 license>`](https://creativecommons.org/publicdomain/zero/1.0/deed.en).
